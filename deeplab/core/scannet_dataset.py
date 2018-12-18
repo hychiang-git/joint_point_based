@@ -122,7 +122,6 @@ class ScannetDatasetTest():
         self.root = root
         self.split = split
         self.get_pixmeta = get_pixmeta
-        self.point_from_depth = point_from_depth
         self.get_scene_point = get_scene_point
         self.num_classes = num_classes
         self.frame_skip = frame_skip
@@ -143,18 +142,15 @@ class ScannetDatasetTest():
         if self.get_scene_point is True:
             scene_point = np.load(os.path.join(scene_dir, scene_name+'.npy'))
 
-        pixel_meta_list = list()
-        color_img_list = list() 
-        depth_img_list = list() 
         _, color_imgs, pixcoord_imgs, pixmeta_imgs = \
             dataset_utils.get_list(scene_dir=scene_dir, 
-                     label_dir='pseudo_pose_label', color_dir='pseudo_pose_color',\
+                     label_dir=None, color_dir='pseudo_pose_color',\
                      pixcoord_dir='pseudo_pose_pixel_coord', pixmeta_dir='pseudo_pose_pixel_meta',\
-                     label_ext='png', color_ext='jpg', pixcoord_ext='npz', pixmeta_ext='npz')
+                     label_ext=None, color_ext='jpg', pixcoord_ext='npz', pixmeta_ext='npz')
         if len(color_imgs) > 0:
             data_dir = zip(color_imgs[::self.frame_skip], \
-                           depth_imgs[::self.frame_skip], normal_imgs[::self.frame_skip], \
-                           pixcoord_imgs[::self.frame_skip], pixmeta_imgs[::self.frame_skip], pose_txts[::self.frame_skip])
+                           pixcoord_imgs[::self.frame_skip], \
+                           pixmeta_imgs[::self.frame_skip])
             get_scene_data = partial(dataset_utils.get_test_scene_data, 
                                      self.get_pixmeta)
             res = self.pool.map(get_scene_data, data_dir)
@@ -174,6 +170,7 @@ class ScannetDatasetTest():
 
 if __name__ == "__main__":
     from utils import vis_utils
+
     d = ScannetDatasetTrain(root = '/tmp3/hychiang/scannetv2_data', num_classes=21)
     start_time = time.time()
     for i in range(5):
@@ -181,12 +178,26 @@ if __name__ == "__main__":
         print(scene_name, color_img.shape, label_img.shape, weight_img.shape) 
     print('Load training set: ', time.time()-start_time)
 
-    #d = ScannetDatasetTest(root = '/tmp3/hychiang/scannetv2_data', num_classes=21, \
-    #                       get_pixmeta=True, get_scene_point=True, frame_skip=1)
-    #start_time = time.time()
-    #for i in range(5):
-    #    scene_data = d[i]
-    #    print(scene_data['scene_name'], len(scene_data['pixel_meta_list']), \
-    #          len(scene_data['color_img_list']), len(scene_data['depth_img_list']), \
-    #          len(scene_data['coord_img_list']), len(scene_data['valid_coord_idx_list']))
-    #print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
+    d = ScannetDatasetVal(root = '/tmp3/hychiang/scannetv2_data', num_classes=21, \
+                           get_pixmeta=True, get_scene_point=True, frame_skip=1)
+    start_time = time.time()
+    for i in range(5):
+        scene_data = d[i]
+        print(scene_data['scene_name'], scene_data['num_view'], scene_data['scene_point'].shape,
+              len(scene_data['color_img_list']), len(scene_data['pixel_label_list']),
+              len(scene_data['pixel_weight_list']), len(scene_data['pixel_meta_list']),
+              scene_data['color_img_list'][0].shape, scene_data['pixel_label_list'][0].shape,
+              scene_data['pixel_weight_list'][0].shape, scene_data['pixel_meta_list'][0].shape
+            )
+    print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
+
+    d = ScannetDatasetTest(root = '/tmp3/hychiang/scannetv2_data', split='val', num_classes=21, \
+                           get_pixmeta=True, get_scene_point=True, frame_skip=1)
+    start_time = time.time()
+    for i in range(5):
+        scene_data = d[i]
+        print(scene_data['scene_name'], scene_data['num_view'], scene_data['scene_point'].shape,
+              len(scene_data['color_img_list']), len(scene_data['pixel_meta_list']),
+              scene_data['color_img_list'][0].shape, scene_data['pixel_meta_list'][0].shape
+            )
+    print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
