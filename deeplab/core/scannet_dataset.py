@@ -174,12 +174,19 @@ class ScannetDatasetTest():
 
 if __name__ == "__main__":
     from utils import vis_utils
-    d = ScannetDatasetTest(root = '/tmp3/hychiang/scannetv2_data', num_classes=21, \
-                           get_pixmeta=True, get_scene_point=True, frame_skip=1)
+    d = ScannetDatasetTrain(root = '/tmp3/hychiang/scannetv2_data', num_classes=21)
     start_time = time.time()
     for i in range(5):
-        scene_data = d[i]
-        print(scene_data['scene_name'], len(scene_data['pixel_meta_list']), \
-              len(scene_data['color_img_list']), len(scene_data['depth_img_list']), \
-              len(scene_data['coord_img_list']), len(scene_data['valid_coord_idx_list']))
-    print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
+        scene_name, color_img, label_img, weight_img = d[i]
+        print(scene_name, color_img.shape, label_img.shape, weight_img.shape) 
+    print('Load training set: ', time.time()-start_time)
+
+    #d = ScannetDatasetTest(root = '/tmp3/hychiang/scannetv2_data', num_classes=21, \
+    #                       get_pixmeta=True, get_scene_point=True, frame_skip=1)
+    #start_time = time.time()
+    #for i in range(5):
+    #    scene_data = d[i]
+    #    print(scene_data['scene_name'], len(scene_data['pixel_meta_list']), \
+    #          len(scene_data['color_img_list']), len(scene_data['depth_img_list']), \
+    #          len(scene_data['coord_img_list']), len(scene_data['valid_coord_idx_list']))
+    #print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
