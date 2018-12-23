@@ -1,18 +1,12 @@
 import os
 import sys
-import collections
+#import collections
 import tensorflow as tf
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-print(BASE_DIR)
 sys.path.append(BASE_DIR)
 import xception
-import tf_util
 import train_utils
-#from pointnet_util import pointnet_sa_depth_module, pointnet_fp_module
-#from core import xception
-#from core import tf_util
-#from core.pointnet_util import pointnet_sa_depth_module, pointnet_fp_module
 
 slim = tf.contrib.slim
 
@@ -26,7 +20,6 @@ def joint_encoder(
     images,
     batch_size,
     output_stride=16,
-    depth_init_size=(120, 160),
     bn_decay=None,
     is_training=False,
     fine_tune_batch_norm=False):
