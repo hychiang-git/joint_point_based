@@ -23,20 +23,14 @@ SNAPSHOT_DIR = './snapshots/'
 
 # restore model
 DEEPLAB_INIT_MODEL = './init_weights/deeplabv3_xception_init'
-#DEEPLAB_RESTORE_MODEL = './init_weights/deeplab_model_235.ckpt' 
 DEEPLAB_RESTORE_MODEL = None
-POINTNET_RESTORE_MODEL = None
 GLOBAL_RESTORE_MODEL = None
 
 # data path
 IMAGE_SIZE = (480, 640)
-COORD_SIZE = (120, 160)
-DATA_PATH = os.path.join('/tmp3/hychiang/data/')
+DATA_PATH = '/tmp3/hychiang/scannetv2_data/'
 TRAIN_DATASET = scannet_dataset.ScannetDatasetTrain(
     root = DATA_PATH, 
-    get_depth=False,
-    get_coord=False,
-    point_from_depth=False,
     num_classes=NUM_CLASSES)
 
 # Training configuration 
@@ -82,9 +76,6 @@ def build_train_graph():
     color_img_batch = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
     pixel_label_batch = tf.placeholder(dtype=tf.int32, shape=(BATCH_SIZE, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
     pixel_weight_batch = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
-    coord_img_batch = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, IMAGE_SIZE[0], IMAGE_SIZE[1], 6))
-    coord_label_batch = tf.placeholder(dtype=tf.int32, shape=(BATCH_SIZE, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
-    coord_weight_batch = tf.placeholder(dtype=tf.float32, shape=(BATCH_SIZE, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
     global_step_pl = tf.placeholder(dtype=tf.float32, shape=())
     # model training setup
     is_training = True 
@@ -117,10 +108,8 @@ def build_train_graph():
                 feature, deeplab_end_point = \
                     model.joint_encoder(
                         images=color_img_batch[gpu_batch_start:gpu_batch_end],
-                        coords=coord_img_batch[gpu_batch_start:gpu_batch_end, :, :, 0:3],
                         batch_size = BATCH_SIZE,
                         output_stride=16,
-                        depth_init_size=COORD_SIZE,
                         bn_decay=bn_decay,
                         is_training=is_training,
                         fine_tune_batch_norm=False)
@@ -158,8 +147,7 @@ def build_train_graph():
             with tf.variable_scope('deeplab') as scope:
                 # Get deeplab loss, gradient, variables and gradient multiplier
                 last_layers = model.extra_layer_scopes()
-                deeplab_gv_all = deeplab_optimizer.compute_gradients(deeplab_loss)
-                deeplab_gv = [gv for gv in deeplab_gv_all if 'pointnet' not in gv[1].name]
+                deeplab_gv = deeplab_optimizer.compute_gradients(deeplab_loss)
                 deeplab_grad_mult = train_utils.model_gradient_multipliers(last_layers, 1.0, deeplab_gv)
                 deeplab_gv = train_utils.multiply_gradients(deeplab_gv, deeplab_grad_mult)
                 deeplab_grads.append(deeplab_gv)
@@ -176,15 +164,11 @@ def build_train_graph():
     # train op: apply gradient
     deeplab_train_op = deeplab_optimizer.apply_gradients(deeplab_avg_grads_vars)
 
-    #global_vars = deeplab_save_vars + pointnet_save_vars
     global_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
     ops = {'global_step': global_step_pl,
            'color_img_batch': color_img_batch,
            'pixel_label_batch': pixel_label_batch,
            'pixel_weight_batch': pixel_weight_batch,
-           'coord_img_batch': coord_img_batch,
-           'coord_label_batch': coord_label_batch,
-           'coord_weight_batch': coord_weight_batch,
            'deeplab_logit': deeplab_final_logits,
            'deeplab_loss': deeplab_avg_loss,
            'deeplab_train_op': deeplab_train_op,
@@ -195,22 +179,17 @@ def build_train_graph():
 
 
 def get_sample(sid, dataset, idxs, start_idx):
-    scene_name, color_img, depth_img, pixel_label, pixel_weight, coord_img, coord_label, coord_weight, valid_coord_idx = dataset[idxs[sid+start_idx]]
-    return color_img, depth_img, pixel_label, pixel_weight, coord_img, coord_label, coord_weight 
+    scene_name, color_img, pixel_label, pixel_weight = dataset[idxs[sid+start_idx]]
+    return color_img, pixel_label, pixel_weight
 
 def get_batch_wdp(dataset, idxs, start_idx, end_idx):
     bsize = end_idx-start_idx
     get_sample_partial =partial(get_sample, dataset=dataset, idxs=idxs, start_idx=start_idx)
     res = POOL.map(get_sample_partial, range(bsize))
     color_img_batch = np.array([r[0] for r in res])
-    depth_img_batch = np.array([r[1] for r in res])
-    pixel_label_batch = np.array([r[2] for r in res])
-    pixel_weight_batch = np.array([r[3] for r in res])
-    coord_img_batch = np.array([r[4] for r in res])
-    coord_label_batch = np.array([r[5] for r in res])
-    coord_weight_batch = np.array([r[6] for r in res])
-    return color_img_batch, depth_img_batch, pixel_label_batch, pixel_weight_batch, \
-           coord_img_batch, coord_label_batch, coord_weight_batch
+    pixel_label_batch = np.array([r[1] for r in res])
+    pixel_weight_batch = np.array([r[2] for r in res])
+    return color_img_batch, pixel_label_batch, pixel_weight_batch
 
 def train_one_epoch(epoch, sess, ops):
     """ ops: dict mapping from string to tf ops """
@@ -228,8 +207,7 @@ def train_one_epoch(epoch, sess, ops):
         end_idx = (batch_idx+1) * BATCH_SIZE
         
         start_time = time.time() 
-        color_img_batch, depth_img_batch, pixel_label_batch, pixel_weight_batch, \
-        coord_img_batch, coord_label_batch, coord_weight_batch \
+        color_img_batch, pixel_label_batch, pixel_weight_batch, \
              = get_batch_wdp(TRAIN_DATASET, train_idxs, start_idx, end_idx)
         avg_btime += time.time()-start_time
         # Augment batched point clouds by rotation
@@ -238,10 +216,8 @@ def train_one_epoch(epoch, sess, ops):
             ops['global_step']: epoch*num_batches + batch_idx,
             ops['color_img_batch']: color_img_batch,
             ops['pixel_label_batch']: pixel_label_batch,
-            ops['pixel_weight_batch']: pixel_weight_batch,
-            ops['coord_img_batch']: coord_img_batch,
-            ops['coord_label_batch']: coord_label_batch,
-            ops['coord_weight_batch']: coord_weight_batch}
+            ops['pixel_weight_batch']: pixel_weight_batch
+           }
         _, step, deeplab_loss_val, deeplab_logit_val = sess.run([
             ops['deeplab_train_op'], 
             ops['global_step'],
