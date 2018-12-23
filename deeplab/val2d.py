@@ -22,20 +22,16 @@ BATCH_SIZE = 16
 NUM_CLASSES = 21
 IGNORE_LABEL = 0
 IMAGE_SIZE = (480, 640)
-COORD_SIZE = (120, 160)
-DATA_PATH = os.path.join('/tmp3/hychiang/scannetv2_preprocess/')
+DATA_PATH = '/tmp3/hychiang/scannetv2_data/'
 VAL_DATASET_WHOLE_SCENE = scannet_dataset.ScannetDatasetVal( \
         root=DATA_PATH,
         num_classes=NUM_CLASSES,
         split='val',
-        get_depth=False,
-        get_coord=False,
         get_pixmeta=False,
-        point_from_depth=False,
-        with_scene_point=False,
+        get_scene_point=False,
         frame_skip=5)
 # logging
-LOG_DIR = os.path.join('log', 'val_log')
+LOG_DIR = os.path.join('log', 'val2d_log')
 if not os.path.exists(LOG_DIR):
     os.mkdir(LOG_DIR)
 LOG_FOUT = open(os.path.join(LOG_DIR, 'log_val.txt'), 'w')
@@ -52,18 +48,13 @@ def build_graph():
     color_img = tf.placeholder(dtype=tf.float32, shape=(None, IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
     pixel_label = tf.placeholder(dtype=tf.int32, shape=(None, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
     pixel_weight = tf.placeholder(dtype=tf.float32, shape=(None, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
-    coord_img = tf.placeholder(dtype=tf.float32, shape=(None, IMAGE_SIZE[0], IMAGE_SIZE[1], 6))
-    coord_label = tf.placeholder(dtype=tf.int32, shape=(None, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
-    coord_weight = tf.placeholder(dtype=tf.float32, shape=(None, IMAGE_SIZE[0], IMAGE_SIZE[1], 1))
     # jointly encoder
     with tf.name_scope('joint_encoder') as scope:
         feature, deeplab_end_point = \
             model.joint_encoder(
                 images=color_img,
-                coords=coord_img[:, :, :, 0:3],
                 batch_size = 1,
                 output_stride=16,
-                depth_init_size=COORD_SIZE,
                 bn_decay=None,
                 is_training=is_training,
                 fine_tune_batch_norm=False)
@@ -107,9 +98,6 @@ def build_graph():
         'color_img':color_img,
         'pixel_label':pixel_label,
         'pixel_weight':pixel_weight,
-        'coord_img':coord_img,
-        'coord_label':coord_label,
-        'coord_weight':coord_weight,
         'deeplab_logit':deeplab_logit,
         'deeplab_pred':deeplab_pred,
     }
@@ -140,10 +128,7 @@ def eval(sess, ops):
             feed_dict = {
                 ops['color_img']: scene_data['color_img_list'][start_vid:end_vid],
                 ops['pixel_label']: scene_data['pixel_label_list'][start_vid:end_vid], 
-                ops['pixel_weight']: scene_data['pixel_weight_list'][start_vid:end_vid], 
-                ops['coord_img']: scene_data['coord_img_list'][start_vid:end_vid],
-                ops['coord_label']: scene_data['coord_label_list'][start_vid:end_vid],
-                ops['coord_weight']: scene_data['coord_weight_list'][start_vid:end_vid]}
+                ops['pixel_weight']: scene_data['pixel_weight_list'][start_vid:end_vid]}
 
             # label_dir {path/to/dir}/scnene_name/label/frame_name.png""
             color_img_val, pixel_label_val, pixel_weight_val, \
