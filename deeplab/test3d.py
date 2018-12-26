@@ -21,12 +21,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--restore_model', required=True, help='path to testing model')
 parser.add_argument('--split', required=True, help='train val test split')
 parser.add_argument('--save_feature', dest='save_feature', action='store_true')
-parser.add_argument('--save_image', dest='save_image', action='store_true')
 parser.add_argument('--data_dir', type=str, default='/tmp3/hychiang/scannetv2_data/', help='data directory')
 parser.add_argument('--batch_size', type=int, default=8, help='batch_size')
 parser.add_argument('--from_scene', type=int, default=0, help='the start index of all scenes')
 parser.add_argument('--to_scene', type=int, default=-1, help='the end index of all scenes')
-parser.set_defaults(save_feature=False, save_image=False)
+parser.set_defaults(save_feature=False)
 opt = parser.parse_args()
 
 SAVE_FEATURE = opt.save_feature 
@@ -41,20 +40,17 @@ NUM_CLASSES = 21
 IGNORE_LABEL = 0
 IMAGE_SIZE = (480, 640)
 COORD_SIZE = (120, 160)
-VAL_DATASET_WHOLE_SCENE = scannet_dataset.ScannetDatasetTest( \
+TEST_DATASET = scannet_dataset.ScannetDatasetTest( \
         root=DATA_PATH,
         num_classes=NUM_CLASSES,
         split=SPLIT,
-        get_depth=False,
-        get_coord=False,
         get_pixmeta=True,
-        point_from_depth=False,
-        with_scene_point=True,
+        get_scene_point=True,
         frame_skip=1)
 
 FROM_SCENE = opt.from_scene
 TO_SCENE = opt.to_scene
-num_scene = len(VAL_DATASET_WHOLE_SCENE) 
+num_scene = len(TEST_DATASET) 
 if TO_SCENE > num_scene or TO_SCENE==-1:
     TO_SCENE = num_scene
 assert TO_SCENE > FROM_SCENE
@@ -63,7 +59,7 @@ print('[INFO] from {} to {}'.format(FROM_SCENE, TO_SCENE))
 # logging
 LOG_DIR = os.path.join('log', 'test3d_log', SPLIT)
 if not os.path.exists(LOG_DIR):
-    os.mkdir(LOG_DIR)
+    os.makedirs(LOG_DIR)
 PRED_DIR = os.path.join(LOG_DIR, 'pred')
 if not os.path.exists(PRED_DIR):
     os.mkdir(PRED_DIR)
@@ -89,7 +85,6 @@ def build_graph():
                 images=color_img,
                 batch_size = 1,
                 output_stride=16,
-                depth_init_size=COORD_SIZE,
                 bn_decay=None,
                 is_training=is_training,
                 fine_tune_batch_norm=False)
@@ -143,7 +138,7 @@ def test(sess, ops, save_feature=False):
     for s in range(FROM_SCENE, TO_SCENE):
         test_time = time.time()
         get_time = time.time()
-        scene_data = VAL_DATASET_WHOLE_SCENE[s]
+        scene_data = TEST_DATASET[s]
         get_time = time.time() - get_time
         print('[{} : {} : {}] {}, get time {}' \
               .format(FROM_SCENE, s, TO_SCENE, scene_data['scene_name'], get_time))
