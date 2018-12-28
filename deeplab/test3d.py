@@ -34,6 +34,7 @@ TEST_MODEL = opt.restore_model
 BATCH_SIZE = opt.batch_size 
 SPLIT = opt.split
 DATA_PATH = opt.data_dir
+USE_IMAGE_PERCENT = opt.use_image
 print(opt)
 
 FEATURE_DIMS = 256
@@ -47,7 +48,7 @@ TEST_DATASET = scannet_dataset.ScannetDatasetTest( \
         split=SPLIT,
         get_pixmeta=True,
         get_scene_point=True,
-        frame_skip=1)
+        use_image=USE_IMAGE_PERCENT)
 
 FROM_SCENE = opt.from_scene
 TO_SCENE = opt.to_scene
@@ -58,7 +59,7 @@ assert TO_SCENE > FROM_SCENE
 print('[INFO] from {} to {}'.format(FROM_SCENE, TO_SCENE))
 
 # logging
-LOG_DIR = os.path.join('log', 'test3d_log', SPLIT)
+LOG_DIR = os.path.join('log', 'test3d_log', SPLIT+'_'+str(USE_IMAGE_PERCENT))
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 PRED_DIR = os.path.join(LOG_DIR, 'pred')
