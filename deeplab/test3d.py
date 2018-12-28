@@ -22,6 +22,7 @@ parser.add_argument('--restore_model', required=True, help='path to testing mode
 parser.add_argument('--split', required=True, help='train val test split')
 parser.add_argument('--save_feature', dest='save_feature', action='store_true')
 parser.add_argument('--data_dir', type=str, default='/tmp3/hychiang/scannetv2_data/', help='data directory')
+parser.add_argument('--use_image', type=float, default=1.0, help='percentage of images to back project')
 parser.add_argument('--batch_size', type=int, default=8, help='batch_size')
 parser.add_argument('--from_scene', type=int, default=0, help='the start index of all scenes')
 parser.add_argument('--to_scene', type=int, default=-1, help='the end index of all scenes')

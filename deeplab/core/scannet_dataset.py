@@ -118,13 +118,13 @@ class ScannetDatasetVal():
 class ScannetDatasetTest():
     def __init__(self, root, num_classes=21, split='test', \
                  get_pixmeta=False, get_scene_point=False, \
-                 frame_skip=1, num_proc=20):
+                 use_image=1, num_proc=20):
         self.root = root
         self.split = split
         self.get_pixmeta = get_pixmeta
         self.get_scene_point = get_scene_point
         self.num_classes = num_classes
-        self.frame_skip = frame_skip
+        self.use_image = use_image
         self.pool = mp.Pool(num_proc)
         self.data_dir = os.path.join(self.root, '%s'%self.split)
         self.scene_list = glob.glob(os.path.join(self.data_dir, 'scene*'))
@@ -148,9 +148,10 @@ class ScannetDatasetTest():
                      pixcoord_dir='pseudo_pose_pixel_coord', pixmeta_dir='pseudo_pose_pixel_meta',\
                      label_ext=None, color_ext='jpg', pixcoord_ext='npz', pixmeta_ext='npz')
         if len(color_imgs) > 0:
-            data_dir = zip(color_imgs[::self.frame_skip], \
-                           pixcoord_imgs[::self.frame_skip], \
-                           pixmeta_imgs[::self.frame_skip])
+            end = int(len(color_imgs)*self.use_image)
+            data_dir = zip(color_imgs[0:end], \
+                           pixcoord_imgs[0:end], \
+                           pixmeta_imgs[0:end])
             get_scene_data = partial(dataset_utils.get_test_scene_data, 
                                      self.get_pixmeta)
             res = self.pool.map(get_scene_data, data_dir)
@@ -171,28 +172,28 @@ class ScannetDatasetTest():
 if __name__ == "__main__":
     from utils import vis_utils
 
-    d = ScannetDatasetTrain(root = '/tmp3/hychiang/scannetv2_data', num_classes=21)
-    start_time = time.time()
-    for i in range(5):
-        scene_name, color_img, label_img, weight_img = d[i]
-        print(scene_name, color_img.shape, label_img.shape, weight_img.shape) 
-    print('Load training set: ', time.time()-start_time)
+    #d = ScannetDatasetTrain(root = '/tmp3/hychiang/scannetv2_data', num_classes=21)
+    #start_time = time.time()
+    #for i in range(5):
+    #    scene_name, color_img, label_img, weight_img = d[i]
+    #    print(scene_name, color_img.shape, label_img.shape, weight_img.shape) 
+    #print('Load training set: ', time.time()-start_time)
 
-    d = ScannetDatasetVal(root = '/tmp3/hychiang/scannetv2_data', num_classes=21, \
-                           get_pixmeta=True, get_scene_point=True, frame_skip=1)
-    start_time = time.time()
-    for i in range(5):
-        scene_data = d[i]
-        print(scene_data['scene_name'], scene_data['num_view'], scene_data['scene_point'].shape,
-              len(scene_data['color_img_list']), len(scene_data['pixel_label_list']),
-              len(scene_data['pixel_weight_list']), len(scene_data['pixel_meta_list']),
-              scene_data['color_img_list'][0].shape, scene_data['pixel_label_list'][0].shape,
-              scene_data['pixel_weight_list'][0].shape, scene_data['pixel_meta_list'][0].shape
-            )
-    print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
+    #d = ScannetDatasetVal(root = '/tmp3/hychiang/scannetv2_data', num_classes=21, \
+    #                       get_pixmeta=True, get_scene_point=True, frame_skip=1)
+    #start_time = time.time()
+    #for i in range(5):
+    #    scene_data = d[i]
+    #    print(scene_data['scene_name'], scene_data['num_view'], scene_data['scene_point'].shape,
+    #          len(scene_data['color_img_list']), len(scene_data['pixel_label_list']),
+    #          len(scene_data['pixel_weight_list']), len(scene_data['pixel_meta_list']),
+    #          scene_data['color_img_list'][0].shape, scene_data['pixel_label_list'][0].shape,
+    #          scene_data['pixel_weight_list'][0].shape, scene_data['pixel_meta_list'][0].shape
+    #        )
+    #print('Load all valid scenes with pixel meta, step=5: ', time.time()-start_time)
 
     d = ScannetDatasetTest(root = '/tmp3/hychiang/scannetv2_data', split='val', num_classes=21, \
-                           get_pixmeta=True, get_scene_point=True, frame_skip=1)
+                           get_pixmeta=True, get_scene_point=True, use_image=0.5)
     start_time = time.time()
     for i in range(5):
         scene_data = d[i]
