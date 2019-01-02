@@ -1,0 +1,14 @@
+[INFO] Deeplab Feature:
+Tensor("l2_normalize:0", shape=(?, 480, 640, 256), dtype=float32)
+--
+
+[INFO] Deeplab Logit:
+Tensor("Reshape_1:0", shape=(?, 480, 640, 21), dtype=float32)
+--
+
+[INFO] Deeplab Prediction:
+Tensor("ArgMax:0", shape=(?, 480, 640), dtype=int64)
+--
+
+
+[INFO] 2018-12-27 02:35:08.428638, ./best_model/model_075.ckpt has been restored
