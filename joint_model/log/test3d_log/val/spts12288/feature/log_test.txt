@@ -1,0 +1,10 @@
+[INFO] PointNet2 Logit:
+Tensor("Reshape_1:0", shape=(1, ?, 21), dtype=float32)
+--
+
+[INFO] PointNet2 Prediction:
+Tensor("ArgMax:0", shape=(1, ?), dtype=int64)
+--
+
+
+[INFO] 2018-11-25 09:09:55.148215, ./best_model/model_370.ckpt has been restored
