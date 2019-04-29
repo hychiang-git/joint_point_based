@@ -2,6 +2,27 @@
 
 This directory shows preprocessing ScanNet v2 dataset from exporting `.sens` files.
 The codes under `export_sens/` are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master/prepare_data/prepare_2d_data.py)
+
+
+## Dependencies
+* `numpy`, `imageio`, `scikit-image`, `opencv`
+* depends on the [sens file reader from ScanNet](https://github.com/ScanNet/ScanNet/blob/master/SensReader/python/SensorData.py); should be placed in the same directory 
+* if export_label_images flag is on:
+	* depends on ScanNet util; should be placed in the same directory
+	* assumes that label images are unzipped as scene `scene*/label*/*.png` 
+
+## Example usage 
+```
+    python3 ./export_sens/prepare_trainval_scene.py \
+        --scannet_path $SCANNET_PATH \
+        --output_path $OUTPUT_PATH \
+        --output_image_width 640 \
+        --output_image_height 480 \
+        --export_depth_images \
+        --frame_skip 20 \
+        --num_proc 5 \
+```
+
 <!--
 ## Getting Started
 
