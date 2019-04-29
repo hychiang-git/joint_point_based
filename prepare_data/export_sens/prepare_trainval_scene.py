@@ -4,6 +4,7 @@ import numpy as np
 import skimage.transform as sktf
 import imageio
 import shutil
+import multiprocessing as mp
 
 try:
     from SensorData import SensorData
@@ -28,14 +29,14 @@ parser.add_argument('--frame_skip', type=int, default=20, help='export every nth
 parser.add_argument('--label_map_file', default='', help='path to scannetv2-labels.combined.tsv (required for label export only)')
 parser.add_argument('--output_image_width', type=int, default=320, help='export image width')
 parser.add_argument('--output_image_height', type=int, default=240, help='export image height')
-parser.add_argument('--from_scene', type=int, default=0, help='the start index of all scenes')
-parser.add_argument('--to_scene', type=int, default=-1, help='the end index of all scenes')
+parser.add_argument('--num_proc', type=int, default=5, help='number of process for exporting sens in parallel')
 
 parser.set_defaults(export_depth_images=False, export_label_images=False)
 opt = parser.parse_args()
 if opt.export_label_images:
     assert opt.label_map_file != ''
 print(opt)
+
 
 
 def print_error(message):
@@ -94,32 +95,33 @@ def main():
         sd = SensorData(sens_file)
         sys.stdout.write('\r[ %d | %d ] %s\texporting...' % ((i + 1), len(scenes), scenes[i]))
         sys.stdout.flush()
-        sd.export_intrinsics(output_scene_path)
-        sd.export_poses(output_pose_path, frame_skip=opt.frame_skip)
-        sd.export_color_images(output_color_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
-        if opt.export_depth_images:
-            sd.export_depth_images(output_depth_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
+        #sd.export_intrinsics(output_scene_path)
+        #sd.export_poses(output_pose_path, frame_skip=opt.frame_skip)
+        #sd.export_color_images(output_color_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
+        #if opt.export_depth_images:
+        #    sd.export_depth_images(output_depth_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
 
-        if opt.export_label_images:
-            for f in range(0, len(sd.frames), opt.frame_skip):
-                label_file = os.path.join(label_path, str(f) + '.png')
-                image = np.array(imageio.imread(label_file))
-                image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True)
-                mapped_image = map_label_image(image, label_map)
-                imageio.imwrite(os.path.join(output_label_path, str(f) + '.png'), mapped_image)
-        scene_vh_clean_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean.ply")
-        scene_vh_clean_2_label_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.labels.ply")
-        scene_vh_clean_2_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.ply")
-        scene_vh_clean_2_seg_json = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.0.010000.segs.json")
-        scene_agg_json = os.path.join(opt.scannet_path, scenes[i], scenes[i]+".aggregation.json")
-        shutil.copy(scene_vh_clean_2_ply, output_scene_path)
-        shutil.copy(scene_vh_clean_2_label_ply, output_scene_path)
-        shutil.copy(scene_vh_clean_2_seg_json, output_scene_path)
-        shutil.copy(scene_agg_json, output_scene_path)
-        shutil.copy(scene_vh_clean_ply, output_scene_path)
+        #if opt.export_label_images:
+        #    for f in range(0, len(sd.frames), opt.frame_skip):
+        #        label_file = os.path.join(label_path, str(f) + '.png')
+        #        image = np.array(imageio.imread(label_file))
+        #        image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True)
+        #        mapped_image = map_label_image(image, label_map)
+        #        imageio.imwrite(os.path.join(output_label_path, str(f) + '.png'), mapped_image)
+        #scene_vh_clean_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean.ply")
+        #scene_vh_clean_2_label_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.labels.ply")
+        #scene_vh_clean_2_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.ply")
+        #scene_vh_clean_2_seg_json = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.0.010000.segs.json")
+        #scene_agg_json = os.path.join(opt.scannet_path, scenes[i], scenes[i]+".aggregation.json")
+        #shutil.copy(scene_vh_clean_2_ply, output_scene_path)
+        #shutil.copy(scene_vh_clean_2_label_ply, output_scene_path)
+        #shutil.copy(scene_vh_clean_2_seg_json, output_scene_path)
+        #shutil.copy(scene_agg_json, output_scene_path)
+        #shutil.copy(scene_vh_clean_ply, output_scene_path)
     print('')
 
 
 if __name__ == '__main__':
+    pool = mp.pool(opt.num_proc)
     main()
 

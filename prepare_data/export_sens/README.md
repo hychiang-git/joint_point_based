@@ -1,26 +1,40 @@
-# Preprocess ScanNet v2 dataset 
+# Export .sens files in ScanNet v2 dataset 
 
-This directory shows preprocessing ScanNet v2 dataset from exporting `.sens` files.
-The codes under `export_sens/` are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master/prepare_data/prepare_2d_data.py)
+This directory shows exporting `.sens` files in ScanNet v2 dataset.
+The codes are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master/prepare_data/prepare_2d_data.py)
 
 
 ## Dependencies
 * `numpy`, `imageio`, `scikit-image`, `opencv`
 * depends on the [sens file reader from ScanNet](https://github.com/ScanNet/ScanNet/blob/master/SensReader/python/SensorData.py); should be placed in the same directory 
-* if export_label_images flag is on:
+* if `export_label_images` flag is on:
 	* depends on ScanNet util; should be placed in the same directory
 	* assumes that label images are unzipped as scene `scene*/label*/*.png` 
 
 ## Example usage 
+
+* To extract files from `.sens`. If you wish to export label for train/val set, please run `unzip_trainval_2d_label.py` first.
 ```
     python3 ./export_sens/prepare_trainval_scene.py \
-        --scannet_path $SCANNET_PATH \
-        --output_path $OUTPUT_PATH \
+        --scannet_path /path/to/scannet/scans/ \
+        --output_path /path/to/output/scans/ \
         --output_image_width 640 \
         --output_image_height 480 \
         --export_depth_images \
+        // --export_label_images \
+        --label_map_file /path/to/scannetv2-labels.combined.tsv \
         --frame_skip 20 \
         --num_proc 5 \
+```
+
+* To unzip 2d labels under `/scans/scene*/`
+```
+    python3 unzip_trainval_2d_label.py \
+        --scannet_path /path/to/scannet/scans/ \
+        --label-filt \
+        //--label \
+        //--instance-filt \
+        //--instance \
 ```
 
 <!--
