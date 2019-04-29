@@ -1,0 +1,44 @@
+
+[INFO] 2018-12-10 22:16:24.487121
+
+----- scene0000_00 score ----
+          acc: pixel_backproj_3d 0.98464, 
+avg class acc: pixel_backproj_3d 0.97735, 
+avg class iou: pixel_backproj_3d 0.96834, 
+
+----- scene0458_00 score ----
+          acc: pixel_backproj_3d 0.98095, 
+avg class acc: pixel_backproj_3d 0.97106, 
+avg class iou: pixel_backproj_3d 0.96543, 
+
+----- scene0063_00 score ----
+          acc: pixel_backproj_3d 0.97270, 
+avg class acc: pixel_backproj_3d 0.95944, 
+avg class iou: pixel_backproj_3d 0.95837, 
+
+----- Whole Dataset score ----
+---- pixel_backproj_3d ----
+	class 1, acc: 0.967119; iou: 0.963041, seen: 38502.000000, tp: 37236.000000, fp: 163.000000, fn 1266.000000
+	class 2, acc: 0.998466; iou: 0.991890, seen: 40421.000000, tp: 40359.000000, fp: 268.000000, fn 62.000000
+	class 3, acc: 0.958303; iou: 0.953994, seen: 19042.000000, tp: 18248.000000, fp: 86.000000, fn 794.000000
+	class 4, acc: 0.981043; iou: 0.980047, seen: 2954.000000, tp: 2898.000000, fp: 3.000000, fn 56.000000
+	class 5, acc: 0.971897; iou: 0.971897, seen: 3416.000000, tp: 3320.000000, fp: 0.000000, fn 96.000000
+	class 6, acc: 0.989998; iou: 0.989222, seen: 5099.000000, tp: 5048.000000, fp: 4.000000, fn 51.000000
+	class 7, acc: 0.958975; iou: 0.955412, seen: 6167.000000, tp: 5914.000000, fp: 23.000000, fn 253.000000
+	class 8, acc: 0.988298; iou: 0.983228, seen: 5042.000000, tp: 4983.000000, fp: 26.000000, fn 59.000000
+	class 9, acc: 0.988643; iou: 0.986776, seen: 14793.000000, tp: 14625.000000, fp: 28.000000, fn 168.000000
+	class 10, acc: 0.000000; iou: 0.000000, seen: 0.000000, tp: 0.000000, fp: 0.000000, fn 0.000000
+	class 11, acc: 0.000000; iou: 0.000000, seen: 0.000000, tp: 0.000000, fp: 0.000000, fn 0.000000
+	class 12, acc: 0.970925; iou: 0.968942, seen: 2442.000000, tp: 2371.000000, fp: 5.000000, fn 71.000000
+	class 13, acc: 0.972061; iou: 0.963931, seen: 1897.000000, tp: 1844.000000, fp: 16.000000, fn 53.000000
+	class 14, acc: 0.982424; iou: 0.977113, seen: 5519.000000, tp: 5422.000000, fp: 30.000000, fn 97.000000
+	class 15, acc: 0.994034; iou: 0.992145, seen: 7878.000000, tp: 7831.000000, fp: 15.000000, fn 47.000000
+	class 16, acc: 0.000000; iou: 0.000000, seen: 0.000000, tp: 0.000000, fp: 0.000000, fn 0.000000
+	class 17, acc: 0.994493; iou: 0.993320, seen: 2542.000000, tp: 2528.000000, fp: 3.000000, fn 14.000000
+	class 18, acc: 0.991254; iou: 0.974212, seen: 686.000000, tp: 680.000000, fp: 12.000000, fn 6.000000
+	class 19, acc: 0.000000; iou: 0.000000, seen: 0.000000, tp: 0.000000, fp: 0.000000, fn 0.000000
+	class 20, acc: 0.950505; iou: 0.948075, seen: 6243.000000, tp: 5934.000000, fp: 16.000000, fn 309.000000
+
+          acc: pixel_backproj_3d 0.97908, 
+avg class acc: pixel_backproj_3d 0.97865, 
+avg class iou: pixel_backproj_3d 0.97458, 

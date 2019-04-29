@@ -1,0 +1,6 @@
+/tmp3/hychiang/scannetv2_data/test/scene0707_00/scene0707_00_vh_clean_2.ply, non_coverage: 0.0169842
+/tmp3/hychiang/scannetv2_data/test/scene0708_00/scene0708_00_vh_clean_2.ply, non_coverage: 0.0143478
+/tmp3/hychiang/scannetv2_data/test/scene0709_00/scene0709_00_vh_clean_2.ply, non_coverage: 0.0124777
+/tmp3/hychiang/scannetv2_data/test/scene0710_00/scene0710_00_vh_clean_2.ply, non_coverage: 0.00998982
+/tmp3/hychiang/scannetv2_data/test/scene0711_00/scene0711_00_vh_clean_2.ply, non_coverage: 0.011821
+/tmp3/hychiang/scannetv2_data/test/scene0712_00/scene0712_00_vh_clean_2.ply, non_coverage: 0.00893177
