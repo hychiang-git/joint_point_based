@@ -18,7 +18,6 @@ The codes are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master
     // training set
     python3 prepare_2d_data.py \
         --scannet_path /path/to/scannet/scans/ \
-        --output_path /path/to/output/scans/ \
         --output_image_width 640 \
         --output_image_height 480 \
         // --export_depth_images \
@@ -31,8 +30,7 @@ The codes are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master
 
     // testing set
     python3 prepare_2d_data.py \
-        --scannet_path /path/to/scannet/scans/ \
-        --output_path /path/to/output/scans/ \
+        --scannet_path /path/to/scannet/scans_test/ \
         --output_image_width 640 \
         --output_image_height 480 \
         // --export_depth_images \
