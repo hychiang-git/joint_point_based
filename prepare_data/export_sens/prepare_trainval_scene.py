@@ -120,7 +120,7 @@ def export(scene):
         for f in range(0, len(sd.frames), opt.frame_skip):
             label_file = os.path.join(label_path, str(f) + '.png')
             image = np.array(imageio.imread(label_file))
-            image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True)
+            image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True, mode='constant')
             mapped_image = map_label_image(image, label_map)
             #print(np.min(mapped_image), np.max(mapped_image))
             imageio.imwrite(os.path.join(output_label_path, str(f) + '.png'), mapped_image)
