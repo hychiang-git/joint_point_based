@@ -122,7 +122,7 @@ def export(scene):
             image = np.array(imageio.imread(label_file))
             image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True)
             mapped_image = map_label_image(image, label_map)
-            print(np.min(mapped_image), np.max(mapped_image))
+            #print(np.min(mapped_image), np.max(mapped_image))
             imageio.imwrite(os.path.join(output_label_path, str(f) + '.png'), mapped_image)
 
 def main():
@@ -132,10 +132,10 @@ def main():
     scenes.sort()
     print('Found %d scenes' % len(scenes))
 
-    #pool = mp.Pool(opt.num_proc)
-    #pool.map(export, scenes)
-    for s in scenes:
-        export(s)
+    pool = mp.Pool(opt.num_proc)
+    pool.map(export, scenes)
+    #for s in scenes:
+    #    export(s)
 
 
 if __name__ == '__main__':
