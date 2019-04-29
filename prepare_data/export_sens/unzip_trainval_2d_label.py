@@ -7,10 +7,10 @@ import multiprocessing as mp
 # params
 parser = argparse.ArgumentParser()
 parser.add_argument('--scannet_path', required=True, help='path to scannet data')
-parser.add_argument('--label', dest='unzip_label', action='store_true')
 parser.add_argument('--label-filt', dest='unzip_label_filt', action='store_true')
-parser.add_argument('--instance', dest='unzip_instance', action='store_true')
+parser.add_argument('--label', dest='unzip_label', action='store_true')
 parser.add_argument('--instance-filt', dest='unzip_instance_filt', action='store_true')
+parser.add_argument('--instance', dest='unzip_instance', action='store_true')
 parser.add_argument('--num_proc', type=int, default=5, help='number of process for exporting sens in parallel')
 
 parser.set_defaults(unzip_label=False, unzip_label_filt=False, unzip_instance=False, unzip_instance_filt=False)

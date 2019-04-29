@@ -6,22 +6,11 @@ import imageio
 import shutil
 import multiprocessing as mp
 
-try:
-    from SensorData import SensorData
-except:
-    print('Failed to import SensorData (from ScanNet code toolbox)')
-    sys.exit(-1)
-try:
-    import util
-except:
-    print('Failed to import ScanNet code toolbox util')
-    sys.exit(-1)
-
-
-# params
+''' 
+    params 
+'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--scannet_path', required=True, help='path to scannet data')
-parser.add_argument('--output_path', required=True, help='where to output 2d data')
 parser.add_argument('--export_depth_images', dest='export_depth_images', action='store_true')
 parser.add_argument('--export_label_images', dest='export_label_images', action='store_true')
 parser.add_argument('--label_type', default='label-filt', help='which labels (label or label-filt)')
@@ -38,6 +27,34 @@ if opt.export_label_images:
 print(opt)
 
 
+''' 
+    tools for export and conver label 
+'''
+label_map = None
+g_label_names = None 
+g_label_ids = None
+if opt.export_label_images:
+    try:
+        sys.path.append('../utils')
+        import scannet_utils
+    except:
+        print('Failed to import ScanNet code toolbox util')
+        sys.exit(-1)
+    label_map = scannet_utils.read_label_mapping(opt.label_map_file, label_from='id', label_to='nyu40id')
+    g_label_names = scannet_utils.g_label_names
+    g_label_ids = scannet_utils.g_label_ids
+
+''' 
+    tools for export .sens
+'''
+try:
+    from SensorData import SensorData
+except:
+    print('Failed to import SensorData (from ScanNet code toolbox)')
+    sys.exit(-1)
+
+
+
 
 def print_error(message):
     sys.stderr.write('ERROR: ' + str(message) + '\n')
@@ -46,82 +63,81 @@ def print_error(message):
 # from https://github.com/ScanNet/ScanNet/tree/master/BenchmarkScripts/2d_helpers/convert_scannet_label_image.py
 def map_label_image(image, label_mapping):
     mapped = np.copy(image)
-    for k,v in label_mapping.items():
-        mapped[image==k] = v
+    # only evaluate 20 class in nyu40 label
+    # map nyu40 to 1~21, 0 for unannotated, unknown and not evalutated
+    for scannet_label, nyu40_label in label_mapping.items():
+        if nyu40_label in g_label_ids: # IDS for 20 classes in nyu40 for evaluation (1~21)
+            eval_label = g_label_ids.index(nyu40_label)
+        else: # IDS unannotated, unknow or not for evaluation go to unannotate label (0)
+            eval_label = g_label_names.index('unannotate')
+        mapped[image==scannet_label] = eval_label
     return mapped.astype(np.uint8)
 
-def main():
-    if not os.path.exists(opt.output_path):
-        os.makedirs(opt.output_path)
 
-    label_mapping = None
+def export(scene):
+    sens_file = os.path.join(opt.scannet_path, scene, scene + '.sens')
+    if not os.path.isfile(sens_file):
+        print_error('Error: sens path %s does not exist' % sens_file)
+    
+    output_scene_path = os.path.join(opt.scannet_path, scene)
+    print(output_scene_path, sens_file)
+    ''' pose and color '''
+    output_pose_path = os.path.join(opt.scannet_path, scene, 'pose')
+    if not os.path.isdir(output_pose_path):
+        os.makedirs(output_pose_path)
+    output_color_path = os.path.join(opt.scannet_path, scene, 'color')
+    if not os.path.isdir(output_color_path):
+        os.makedirs(output_color_path)
+
+    ''' depth '''
+    if opt.export_depth_images:
+        output_depth_path = os.path.join(opt.scannet_path, scene, 'depth')
+        if not os.path.isdir(output_depth_path):
+            os.makedirs(output_depth_path)
+    ''' label '''
+    label_path = os.path.join(opt.scannet_path, scene, opt.label_type)
+    if opt.export_label_images and not os.path.isdir(label_path):
+        print_error('Error: using export_label_images option but label path %s does not exist' % label_path)
     if opt.export_label_images:
-        label_map = util.read_label_mapping(opt.label_map_file, label_from='id', label_to='nyu40id')
+        output_label_path = os.path.join(opt.scannet_path, scene, 'mapped_'+opt.label_type)
+        if opt.export_label_images and not os.path.isdir(output_label_path):
+            os.makedirs(output_label_path)
+
+    ## read and export
+    #sys.stdout.write('\r[ %d | %d ] %s\tloading...' % ((i + 1), len(scenes), scenes[i]))
+    #sys.stdout.flush()
+    sd = SensorData(sens_file)
+    #sys.stdout.write('\r[ %d | %d ] %s\texporting...' % ((i + 1), len(scenes), scenes[i]))
+    #sys.stdout.flush()
+
+    sd.export_intrinsics(output_scene_path)
+    sd.export_poses(output_pose_path, frame_skip=opt.frame_skip)
+    sd.export_color_images(output_color_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
+    if opt.export_depth_images:
+        sd.export_depth_images(output_depth_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
+
+    if opt.export_label_images:
+        for f in range(0, len(sd.frames), opt.frame_skip):
+            label_file = os.path.join(label_path, str(f) + '.png')
+            image = np.array(imageio.imread(label_file))
+            image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True)
+            mapped_image = map_label_image(image, label_map)
+            print(np.min(mapped_image), np.max(mapped_image))
+            imageio.imwrite(os.path.join(output_label_path, str(f) + '.png'), mapped_image)
+
+def main():
+
 
     scenes = [d for d in os.listdir(opt.scannet_path) if os.path.isdir(os.path.join(opt.scannet_path, d))]
     scenes.sort()
     print('Found %d scenes' % len(scenes))
-    if opt.from_scene is not None and opt.to_scene is not None:
-        end = min(len(scenes), opt.to_scene)
-    begin = max(0, opt.from_scene)
-    scenes = scenes[begin:end]
-    print('From {} to {}, total: {}'.format(begin, end, len(scenes)))
-    for i in range(len(scenes)):
-        sens_file = os.path.join(opt.scannet_path, scenes[i], scenes[i] + '.sens')
-        output_scene_path = os.path.join(opt.output_path, scenes[i])
-        output_pose_path = os.path.join(opt.output_path, scenes[i], 'pose')
-        if not os.path.isdir(output_pose_path):
-            os.makedirs(output_pose_path)
 
-
-        label_path = os.path.join(opt.scannet_path, scenes[i], opt.label_type)
-        if opt.export_label_images and not os.path.isdir(label_path):
-            print_error('Error: using export_label_images option but label path %s does not exist' % label_path)
-        output_color_path = os.path.join(opt.output_path, scenes[i], 'color')
-        if not os.path.isdir(output_color_path):
-            os.makedirs(output_color_path)
-        if opt.export_depth_images:
-            output_depth_path = os.path.join(opt.output_path, scenes[i], 'depth')
-            if not os.path.isdir(output_depth_path):
-                os.makedirs(output_depth_path)
-        if opt.export_label_images:
-            output_label_path = os.path.join(opt.output_path, scenes[i], 'label')
-            if opt.export_label_images and not os.path.isdir(output_label_path):
-                os.makedirs(output_label_path)
-
-        # read and export
-        sys.stdout.write('\r[ %d | %d ] %s\tloading...' % ((i + 1), len(scenes), scenes[i]))
-        sys.stdout.flush()
-        sd = SensorData(sens_file)
-        sys.stdout.write('\r[ %d | %d ] %s\texporting...' % ((i + 1), len(scenes), scenes[i]))
-        sys.stdout.flush()
-        #sd.export_intrinsics(output_scene_path)
-        #sd.export_poses(output_pose_path, frame_skip=opt.frame_skip)
-        #sd.export_color_images(output_color_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
-        #if opt.export_depth_images:
-        #    sd.export_depth_images(output_depth_path, image_size=[opt.output_image_height, opt.output_image_width], frame_skip=opt.frame_skip)
-
-        #if opt.export_label_images:
-        #    for f in range(0, len(sd.frames), opt.frame_skip):
-        #        label_file = os.path.join(label_path, str(f) + '.png')
-        #        image = np.array(imageio.imread(label_file))
-        #        image = sktf.resize(image, [opt.output_image_height, opt.output_image_width], order=0, preserve_range=True)
-        #        mapped_image = map_label_image(image, label_map)
-        #        imageio.imwrite(os.path.join(output_label_path, str(f) + '.png'), mapped_image)
-        #scene_vh_clean_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean.ply")
-        #scene_vh_clean_2_label_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.labels.ply")
-        #scene_vh_clean_2_ply = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.ply")
-        #scene_vh_clean_2_seg_json = os.path.join(opt.scannet_path, scenes[i], scenes[i]+"_vh_clean_2.0.010000.segs.json")
-        #scene_agg_json = os.path.join(opt.scannet_path, scenes[i], scenes[i]+".aggregation.json")
-        #shutil.copy(scene_vh_clean_2_ply, output_scene_path)
-        #shutil.copy(scene_vh_clean_2_label_ply, output_scene_path)
-        #shutil.copy(scene_vh_clean_2_seg_json, output_scene_path)
-        #shutil.copy(scene_agg_json, output_scene_path)
-        #shutil.copy(scene_vh_clean_ply, output_scene_path)
-    print('')
+    #pool = mp.Pool(opt.num_proc)
+    #pool.map(export, scenes)
+    for s in scenes:
+        export(s)
 
 
 if __name__ == '__main__':
-    pool = mp.pool(opt.num_proc)
     main()
 
