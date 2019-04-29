@@ -15,7 +15,8 @@ The codes are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master
 
 * To extract files from `.sens`. If you wish to export label for train/val set, please set the `label_map_file` flag and run `unzip_trainval_2d_label.py` first.
 ```
-    python3 prepare_trainval_scene.py \
+    // training set
+    python3 prepare_2d_data.py \
         --scannet_path /path/to/scannet/scans/ \
         --output_path /path/to/output/scans/ \
         --output_image_width 640 \
@@ -24,6 +25,17 @@ The codes are borrowed from [3DMV](https://github.com/angeladai/3DMV/blob/master
         // --export_label_images \
         // --label_type label-filt \
         // --label_map_file /path/to/scannetv2-labels.combined.tsv \
+        --frame_skip 20 \
+        --num_proc 5 \
+
+
+    // testing set
+    python3 prepare_2d_data.py \
+        --scannet_path /path/to/scannet/scans/ \
+        --output_path /path/to/output/scans/ \
+        --output_image_width 640 \
+        --output_image_height 480 \
+        // --export_depth_images \
         --frame_skip 20 \
         --num_proc 5 \
 ```
