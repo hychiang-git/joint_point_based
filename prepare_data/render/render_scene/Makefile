@@ -36,4 +36,4 @@ tinyply.o: tinyply.cpp
 	g++ $(CPPFLAGS) -c $< -o $@ 
 
 clean:
-	rm *.o syn_pose sfm_pose
+	rm syn_pose sfm_pose

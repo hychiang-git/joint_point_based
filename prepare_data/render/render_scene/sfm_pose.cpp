@@ -32,6 +32,14 @@ std::vector<std::string> readlist(const std::string& data_dir, const std::string
     return scenes;
 }
 
+std::vector<Eigen::Matrix4f> get_sfm_poses(const std::string scene_dir){
+    std::vector<Eigen::Matrix4f> poses;
+    std::vector<std::string> posefiles = globVector(scene_dir+"/pose/*.txt");
+    for(int i=0; i<posefiles.size(); i++){
+        poses.push_back(render::read_camera_parameters(posefiles[i]));
+    }
+    return poses;
+}
 
 std::mutex vector_mutex;
 
@@ -42,21 +50,10 @@ void batch_render(unsigned int start, unsigned int end, std::vector<render::Rend
             render::RenderBuffer buf(param.width, param.height);
             Eigen::Matrix4f extrinsic = param.poses[i] * param.cam_extrinsic;
             render::render(param.v, param.f, param.v_color, param.cam_intrinsic, extrinsic, param.height, param.width, buf);
-            if(buf.is_valid){
-                vector_mutex.lock();
-                valid_images.push_back(buf);
-                vector_mutex.unlock();
-            }
-            else{ 
-                delete [] buf.depth;
-                delete [] buf.depth_vis;
-                delete [] buf.color;
-                delete [] buf.normal;
-                delete [] buf.normal_vis;
-                delete [] buf.pixcoord;
-                delete [] buf.pixmeta;
-                delete [] buf.mesh_vertex;
-            }
+            //if(buf.is_valid){ // don't need to check if using sfm poses
+            vector_mutex.lock();
+            valid_images.push_back(buf);
+            vector_mutex.unlock();
         }
     }
     //std::cout << "** [INFO] DONE, start: " << start <<", end: "<< end <<", num poses: " << param.poses.size() << std::endl;
@@ -70,7 +67,7 @@ bool batch_dump(unsigned int start, unsigned int end, std::vector<render::Render
             std::ostringstream fname;
             fname << std::setw(6) << std::setfill('0') << i ;
             //std::cout << fname.str() << std::endl;
-            render::dump_buffer(images[i], scene_dir, fname.str());
+            render::dump_buffer(images[i], scene_dir, "sfm", fname.str());
         }
     }
     //std::cout << "** [INFO] DONE, start: " << start <<", end: "<< end <<", num images: " << images.size() << std::flush;
@@ -78,33 +75,62 @@ bool batch_dump(unsigned int start, unsigned int end, std::vector<render::Render
 }
 
 
-int main(int argc, char *argv[]) {
+void read_user_parameters(
+    int argc,
+    char *argv[],
+    std::string &dataset_dir,
+    std::vector<std::string> &scene_dirs, 
+    unsigned int &num_workers){
     std::cout <<"[INFO] Read "<< argc <<" arguments."<<std::endl;
-    if(argc<7){
-        std::cout << "Usage: ./render dataset_dir scene_list pose_mode output_height output_depth num_thread"<<std::endl;
-        std::cout << "\tdataset_dir, e.g. scannet_data/val/"<<std::endl;
-        std::cout << "\tscene_list, e.g. scannetv2_val.txt"<<std::endl;
-        std::cout << "\tpose_mode, e.g. {1/2/3/4}"<<std::endl;
-        std::cout << "\toutput_height, e.g. 480"<<std::endl;
-        std::cout << "\toutput_width, e.g. 640"<<std::endl;
-        std::cout << "\tnum_thread, e.g. 10"<<std::endl;
-        return 0;
+    if(argc<2 || argc>4){
+        std::cout << "Usage: ./syn_pose dataset_dir scene_list num_thread"<<std::endl;
+        std::cout << "\tdataset_dir, e.g. scannet_data/scans/"<<std::endl;
+        std::cout << "\tscene_list, e.g. scannetv2_val.txt, (optional)"<<std::endl;
+        std::cout << "\tnum_thread, e.g. 10,  (optional default=1)"<<std::endl;
+        exit(-1);
     }
     else{
-        std::cout << "[INFO]: ./render dataset_dir scene_list pose_mode output_height output_depth num_thread"<<std::endl;
+        std::cout << "[INFO]: ./syn_pose dataset_dir scene_list num_thread"<<std::endl;
         std::cout << "\tdataset_dir: "<<argv[1]<<std::endl;
-        std::cout << "\tscene_list: "<<argv[2]<<std::endl;
-        std::cout << "\tpose_mode: "<<argv[3]<<std::endl;
-        std::cout << "\toutput_height: "<<argv[4]<<std::endl;
-        std::cout << "\toutput_width:"<<argv[5]<<std::endl;
-        std::cout << "\tnum_thread:"<<argv[6]<<std::endl;
+        dataset_dir = argv[1];
+
+        if(argc==3){
+            std::string scene_list = argv[2];
+            std::cout << "\tread scene_list: "<<scene_list<<std::endl;
+            std::vector<std::string> scene_list_dirs = readlist(dataset_dir, scene_list);
+            std::vector<std::string> scene_in_dirs = globVector(dataset_dir.append("/scene0*"));
+            if(scene_list_dirs.size()>scene_in_dirs.size()){
+                std::cerr << "Read " << scene_list_dirs.size() << "in list, but only find " 
+                          << scene_in_dirs.size() << " directory" << std::endl;
+                exit(-1);
+            }
+            scene_dirs = scene_list_dirs;
+        }
+        else{
+            std::cout << "\tread scene from dataset_dir: "<<argv[1]<<std::endl;
+            scene_dirs = globVector(dataset_dir.append("/scene0*"));
+        }
+        std::cout <<"\n[INFO] Find "<< scene_dirs.size() << " scenes" <<std::endl;
+        if(argc==4){
+            num_workers = atoi(argv[3]);
+            std::cout << "\tnum_thread:"<<num_workers<<std::endl;
+        }
+        else{
+            num_workers = 1;
+            std::cout << "\tuse default thread numnber: "<<num_workers<<std::endl;
+        }
     }
-    std::string dataset_dir = argv[1];
-    std::string scene_list = argv[2];
-    std::vector<std::string> scene_dirs = readlist(dataset_dir, scene_list);
-    ////std::vector<std::string> scene_dirs = globVector(dataset_dir.append("/scene0*"));
-    std::cout <<"\n[INFO] Find "<< scene_dirs.size() << " scenes" <<std::endl;
+}
+
+int main(int argc, char *argv[]) {
+    std::string dataset_dir;
+    std::vector<std::string> scene_dirs;
+    unsigned int num_workers;
+    read_user_parameters(argc, argv, dataset_dir, scene_dirs, num_workers);
     std::cout << "\n------------------------ Start rendering ----------------------------" << std::endl;
+
+    unsigned int height = 480;
+    unsigned int width = 640;
     double total_non_coverage = 0.0;
     unsigned int total_valid_images = 0;
     unsigned int total_coverage_images = 0;
@@ -132,8 +158,7 @@ int main(int argc, char *argv[]) {
         Eigen::Matrix4f cam_extrinsic = render::read_camera_parameters(depth_extrinsic);
 
         /** get all poses **/
-        int pose_mode = atoi(argv[3]);
-        std::vector<Eigen::Matrix4f> pseudo_poses = render::pseudo_camera_poses(scene_min, scene_max, pose_mode);
+        std::vector<Eigen::Matrix4f> poses = get_sfm_poses(scene_dirs[sid]);
 
         /** output scene info **/
         std::cout<<"[INFO] rendering "<< scene_dirs[sid] << std::endl;
@@ -145,15 +170,12 @@ int main(int argc, char *argv[]) {
         for(int i=0; i<3; i++)
             std::cout<<scene_max[i]<<" ";
         std::cout<<std::endl;
-        std::cout<<"\tpseudo_poses size:"<<pseudo_poses.size()<<std::endl;
+        std::cout<<"\tposes size:"<<poses.size()<<std::endl;
 
         /** get valid poses from pseudo poses **/
-        unsigned int height = atoi(argv[4]);
-        unsigned int width = atoi(argv[5]);
-        unsigned int num_workers = atoi(argv[6]);
         // parameters
         render::RenderParam param(height, width);
-        param.poses = pseudo_poses;
+        param.poses = poses;
         param.f = face;
         param.v = vertex;
         param.v_color = vertex_color;
@@ -237,3 +259,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

@@ -1,3 +1,9 @@
+#ignore executable files for rendering
+prepare_data/render/render_scene/sfm_pose
+prepare_data/render/render_scene/syn_pose
+#ignore prediction files
+**/pred/*
+
 # ignore hdf5 data
 **/*.h5
 # ignore points data
@@ -6,58 +12,23 @@
 **/*.seg
 # ignore points annotations 
 **/*.arff
-
 # ignore testing log
 **/*.log
-
 # ignore caffemodel
 **/*.caffemodel
-
-# ignore pred files 
-**/pred*/scene*.txt
-
-# ignore dump dir
-**/dump/*
-!**/dump/.gitkeep
-# ignore graph dir
-**/graph/*
-!**/graph/.gitkeep
-# ignore event
-**/events.out.tfevents.*
-
 # ignore model dir
 **/*.index
 **/*.meta
 **/*.data-00000-of-00001
 **/checkpoint
-
-# ignore 2D dataset
-**/scannet_frames_val/*
-!**/scannet_frames_val/.gitkeep
-**/scannet_frames_train/*
-!**/scannet_frames_train/.gitkeep
-
-# ignore data dir
-**/data/*
-!**/data/.gitkeep
-
-# ignore output/retrieve dir
-**/output/*
-!**/output/.gitkeep
-
 # ignore .zip file
 **/*.zip
 # ignore .tar* file
 **/*.tar*
-
 # ignore .pyc file
 **/*.pyc
-
 # ignore .swap file
 **/*.swp
-
-# ignore .pickle 
-**/*.pickle
 # ignore .npy 
 **/*.npy
 # ignore .npz 
@@ -85,6 +56,5 @@
 # ignore .pbtxt
 **/*.pbtxt
 **/*.pb
-
 # ignore .nfs file
 **/.nfs*

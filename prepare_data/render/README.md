@@ -13,6 +13,7 @@ Some codes are borrowed from [liu115/mesh2color_voxel](https://github.com/liu115
 
 ## Built With
 
+* [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Pager) - For matrix manipulation
 * [Xtensor](https://github.com/QuantStack/xtensor) - For dumping c++ array into npy, npz
 * [Tinyply](https://github.com/ddiakopoulos/tinyply) - For reading ply files
 
@@ -31,14 +32,14 @@ Some codes are borrowed from [liu115/mesh2color_voxel](https://github.com/liu115
 ```
     // synthetic camera poses 
     $./syn_pose dataset_dir scene_list num_thread
-        // dataset_dir, e.g. scannet_data/val/
+        // dataset_dir, e.g. scannet_data/scans/
         // scene_list, e.g. scannetv2_val.txt, (optional)
         // num_thread, e.g. 10,  (optional default=1)
 
 
     // Stuctural from Motion (SfM) camera poses
     $./sfm_pose dataset_dir scene_list num_thread
-        // dataset_dir, e.g. scannet_data/val/
+        // dataset_dir, e.g. scannet_data/scans/
         // scene_list, e.g. scannetv2_val.txt, (optional)
         // num_thread, e.g. 10,  (optional default=1)
 ```

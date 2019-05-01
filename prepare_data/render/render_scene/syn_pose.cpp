@@ -86,7 +86,7 @@ void read_user_parameters(
     std::cout <<"[INFO] Read "<< argc <<" arguments."<<std::endl;
     if(argc<2 || argc>4){
         std::cout << "Usage: ./syn_pose dataset_dir scene_list num_thread"<<std::endl;
-        std::cout << "\tdataset_dir, e.g. scannet_data/val/"<<std::endl;
+        std::cout << "\tdataset_dir, e.g. scannet_data/scans/"<<std::endl;
         std::cout << "\tscene_list, e.g. scannetv2_val.txt, (optional)"<<std::endl;
         std::cout << "\tnum_thread, e.g. 10,  (optional default=1)"<<std::endl;
         exit(-1);
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
         Eigen::Matrix4f cam_extrinsic = render::read_camera_parameters(depth_extrinsic);
 
         /** get all poses **/
-        std::vector<Eigen::Matrix4f> pseudo_poses = render::pseudo_camera_poses(scene_min, scene_max, pose_mode);
+        std::vector<Eigen::Matrix4f> poses = render::pseudo_camera_poses(scene_min, scene_max, pose_mode);
 
         /** output scene info **/
         std::cout<<"[INFO] rendering "<< scene_dirs[sid] << std::endl;
@@ -173,12 +173,12 @@ int main(int argc, char *argv[]) {
         for(int i=0; i<3; i++)
             std::cout<<scene_max[i]<<" ";
         std::cout<<std::endl;
-        std::cout<<"\tpseudo_poses size:"<<pseudo_poses.size()<<std::endl;
+        std::cout<<"\tposes size:"<<poses.size()<<std::endl;
 
         /** get valid poses from pseudo poses **/
         // parameters
         render::RenderParam param(height, width);
-        param.poses = pseudo_poses;
+        param.poses = poses;
         param.f = face;
         param.v = vertex;
         param.v_color = vertex_color;
