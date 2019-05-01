@@ -9,12 +9,23 @@ import numpy as np
 import  multiprocessing as mp
 from PIL import Image
 
-import scannet_util
-from human_sorting import human_sort
-g_label_ids = scannet_util.g_label_ids
+sys.path.append('../../')
+from utils import scannet_utils
+from utils.human_sorting import human_sort
+g_label_ids = scannet_utils.g_label_ids
 
-DATA_DIR = None
-LOG_FILE = 'render_label_log.txt'
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--data_dir",required=True,  help="data dir, e.g. ../data/scannet_frames_train")
+parser.add_argument("--prefix",required=True,  help="syn/sfm")
+parser.add_argument("--scene_list", required=False, default='', help="scannet split scene list, e.g. ./Benchmark/scannetv2_train.txt")
+parser.add_argument("--num_proc", required=False, type=int, default=1, help="number of parallel process, default is 1")
+args = parser.parse_args()
+if args.scene_list != '':
+    scene_names = [line.rstrip() for line in open(args.scene_list)]
+else:
+    scene_names = [os.path.basename(scene_path) for scene_path in glob.glob(args.data_dir+"/scene0*")]
+
 
 def barycentric_weight(pixcoord, pixmeta):
     # pixel coord: x, y, z
@@ -47,7 +58,7 @@ def visualize_label_image(filename, image):
     height = image.shape[0]
     width = image.shape[1]
     vis_image = np.zeros([height, width, 3], dtype=np.uint8)
-    color_palette = scannet_util.create_color_palette()
+    color_palette = scannet_utils.create_color_palette()
     for idx, color in enumerate(color_palette):
         vis_image[image==idx] = color
     imageio.imwrite(filename, vis_image)
@@ -55,14 +66,14 @@ def visualize_label_image(filename, image):
 
 def render(scene_dir):
     # get pixel coordinates files 
-    scene_pixel_coord = os.path.join(DATA_DIR, scene_dir, "pseudo_pose_pixel_coord")
+    scene_pixel_coord = os.path.join(args.data_dir, scene_dir, args.prefix+"_pixel_coord")
     if not os.path.exists(scene_pixel_coord):
         print('[ERROR] Not found scene scene pixel coordinates direcotry {}'.format(scene_pixel_coord))
         raise
     else:
         pixcoord_npzs = human_sort(glob.glob(scene_pixel_coord+'/*.npz'))
     # get pixel meta files 
-    scene_pixel_meta = os.path.join(DATA_DIR, scene_dir, "pseudo_pose_pixel_meta")
+    scene_pixel_meta = os.path.join(args.data_dir, scene_dir, args.prefix+"_pixel_meta")
     if not os.path.exists(scene_pixel_meta):
         print('[ERROR] Not found scene scene pixel meta direcotry {}'.format(scene_pixel_meta))
         raise
@@ -71,7 +82,7 @@ def render(scene_dir):
     assert len(pixcoord_npzs) == len(pixmeta_npzs), 'file number not equal:{}, {}'.format(len(pixcoord_npzs), len(pixmeta_npzs))
 
     # mkdir render_label directory 
-    scene_render_label = os.path.join(DATA_DIR, scene_dir, "pseudo_pose_label")
+    scene_render_label = os.path.join(args.data_dir, scene_dir, args.prefix+"_label")
     if not os.path.exists(scene_render_label):
         os.makedirs(scene_render_label) 
     # render label to render_label directory
@@ -84,7 +95,7 @@ def render(scene_dir):
         pixcoord = np.load(pixcoord_npzs[i])['pixcoord']
         assert pixmeta.shape[0:2] == pixcoord.shape[0:2]
         # load scene points label
-        scene_pt_label = np.load(os.path.join(DATA_DIR, scene_dir, scene_dir+'.npy'))[:, 10]
+        scene_pt_label = np.load(os.path.join(args.data_dir, scene_dir, scene_dir+'.npy'))[:, 10]
 
         # get closest vertex of each pixel
         mesh_vertex, v1w, v2w, v3w = barycentric_weight(pixcoord, pixmeta)
@@ -111,24 +122,13 @@ def render(scene_dir):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--scene_list", required=True, help="scannet split scene list, e.g. ./Benchmark/scannetv2_train.txt")
-    parser.add_argument("--data_dir",required=True,  help="data dir, e.g. ../data/scannet_frames_train")
-    parser.add_argument("--num_proc", required=False, type=int, default=30, help="number of parallel process, default is 30")
-    args = parser.parse_args()
-    DATA_DIR = args.data_dir 
-    SCENE_NAMES = [line.rstrip() for line in open(args.scene_list)]
-    
-
-    print('***  Data Directory: ', DATA_DIR)
-    print('***  Find ', len(SCENE_NAMES),' scenes in scene txt')
+    print('***  Data Directory: ', args.data_dir)
+    print('***  Find ', len(scene_names),' scenes in scene txt')
     print('***  Rendering label from pixel meta. Start in 5 seconds ***')
 
-    LOG_FOUT = open(os.path.join(DATA_DIR, LOG_FILE),'w')
-    #time.sleep(5)
+    time.sleep(5)
 
     print('*** GO ***')
     pool = mp.Pool(args.num_proc)
-    pool.map(render, SCENE_NAMES)
-    LOG_FOUT.close()
+    pool.map(render, scene_names)
 

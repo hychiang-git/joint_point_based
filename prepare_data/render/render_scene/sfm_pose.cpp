@@ -222,16 +222,16 @@ int main(int argc, char *argv[]) {
         std::cout <<"\tscene non-coverage:"<< scene_non_coverage <<", current total non-coverage:"<<total_non_coverage/(sid+1)<<", "<<(sid+1)<<"/"<<scene_dirs.size()<<std::endl;
         std::cout << "\trendering time: "<< omp_get_wtime() - ts <<" sec"<< std::endl;
 
+        // dump all valid image
         float ots = omp_get_wtime();
-        batch_size = (int)ceil(coverage_images.size() / (float)num_workers);
+        batch_size = (int)ceil(valid_images.size() / (float)num_workers);
         for(unsigned int i=0; i<num_workers; i++){
             // execute thread
             unsigned int start = i * batch_size;
             unsigned int end = start + batch_size;
-            if(end > coverage_images.size())
-                end = coverage_images.size();
-            //std::cout << "start: " << start <<", end: "<< end <<", num images: " << coverage_images.size() << std::endl;
-            thread_pool[i] = std::thread(batch_dump, start, end, ref(coverage_images), scene_dirs[sid]);
+            if(end > valid_images.size())
+                end = valid_images.size();
+            thread_pool[i] = std::thread(batch_dump, start, end, ref(valid_images), scene_dirs[sid]);
         }
         for(unsigned int i=0; i<num_workers; i++){
             // wait the thread stop

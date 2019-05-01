@@ -1,6 +1,12 @@
 # Preprocess ScanNet v2 dataset 
 
-This directory shows preprocessing ScanNet v2 dataset from exporting `.sens` files.
+This directory shows preprocessing ScanNet v2 dataset.
+
+Please follow the steps for preparing data, also see the README files inside the directories for more details.
+1. export\_sens
+2. collect points from ply
+3. render images  from ply
+
 
 <!--
 ## Getting Started
