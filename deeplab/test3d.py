@@ -20,7 +20,7 @@ slim = tf.contrib.slim
 parser = argparse.ArgumentParser()
 parser.add_argument('--restore_model', required=True, help='path to testing model')
 parser.add_argument('--split', required=True, help='train val test split')
-parser.add_argument('--save_feature', dest='save_feature', action='store_true')
+parser.add_argument('--save_feature', dest='save_feature', action='store_true', help='to save image features')
 parser.add_argument('--data_dir', type=str, default='/tmp3/hychiang/scannetv2_data/', help='data directory')
 parser.add_argument('--use_image', type=float, default=1.0, help='percentage of images to back project')
 parser.add_argument('--batch_size', type=int, default=8, help='batch_size')
