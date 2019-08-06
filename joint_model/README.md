@@ -23,26 +23,24 @@ optional arguments:
 ### To Test
 
 ```
-usage: test3d.py [-h] --restore_model RESTORE_MODEL --split SPLIT
-                 [--save_feature] [--data_dir DATA_DIR]
-                 [--use_image USE_IMAGE] [--batch_size BATCH_SIZE]
-                 [--from_scene FROM_SCENE] [--to_scene TO_SCENE]
+usage: test.py [-h] --restore_model RESTORE_MODEL --split SPLIT
+              [--use_feature USE_FEATURE] [--spoints SPOINTS]
+              [--stride STRIDE] [--padding PADDING] [--unmask]
+              [--from_scene FROM_SCENE] [--to_scene TO_SCENE]
 
 optional arguments:
   -h, --help            show this help message and exit
   --restore_model RESTORE_MODEL
                         path to testing model
   --split SPLIT         train val test split
-  --save_feature        to save image feature
-  --data_dir DATA_DIR   data directory
-  --use_image USE_IMAGE
-                        percentage of images to back project onto the 3D scene
-  --batch_size BATCH_SIZE
-                        batch_size
+  --use_feature USE_FEATURE
+                        use what image features:
+                        feature/syn_1.0/syn_0.5/syn_0.3/syn_0.1
+  --spoints SPOINTS     scene points number
+  --stride STRIDE       scene stride size
+  --padding PADDING     scene padding size
+  --unmask              not use mask to predict center only
   --from_scene FROM_SCENE
                         the start index of all scenes
   --to_scene TO_SCENE   the end index of all scenes
-```
-
-```
 ```
