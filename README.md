@@ -1,89 +1,29 @@
-# Joint-based 3D Indoor Semantic Segmentation
+# A Unified Point-Based Framework for 3D Segmentation
 
-This repository contain joint-based models (image-based, point-based, voxel-based) 3D semantic segmentation methods on 3D semantic segmentation.
-<!--
-## Getting Started
+This repository contains the implementation of *A Unified Point-Based Framework for 3D indoor scene semantic segmentation*. 
+![Idea](images/idea.jpg)
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+## Prepare Data and 3D Evaluation
+The preprocessing steps of ScanNet v2 dataset. Some of the codes are borrowed from [3DMV](https://github.com/angeladai/3DMV). We render the images from 3D indoor scenes in ScanNetV2 dataset, and use the images to train deeplab.  
 
-### Prerequisites
+## DeepLab
+The implementation is orignal from [DeepLab](https://github.com/tensorflow/models/tree/master/research/deeplab). We use DeepLab as our image feature extractor, and back-project the feature onto 3D vertices. To train or to finetune our model, please see the README.md inside the directory.
 
-What things you need to install the software and how to install them
+## Joint Model
+The model predicts points' semantics with a local encoder, a global encoder and a decoder. The input features (color feature, geometry feature) are fused into point-based representation. To train or to finetune our model, please see the README.md inside the directory.
 
+
+## 3D Evaluation
+For evaluation, we use the code provided from [ScanNet Banchmark](https://github.com/ScanNet/ScanNet) to evaluate our model performance.
+
+
+## Citation
+If you find this repository useful, please cite:
 ```
-Give examples
+@article{chiang2019unified,
+  title={A Unified Point-Based Framework for 3D Segmentation},
+  author={Chiang, Hungyueh and Lin, Yenliang and Liu, Yuehcheng and Hsu, Winston H},
+  journal={arXiv preprint arXiv:1908.00478},
+  year={2019}
+}
 ```
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
---->
-
