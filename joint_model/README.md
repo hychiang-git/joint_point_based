@@ -14,7 +14,7 @@ optional arguments:
                         Epoch to run [default: 501]
   --num_gpus NUM_GPUS   Number of GPU [default: 1]
   --gpu_bsize GPU_BSIZE
-                        Batch size in a GPU [default: 4]
+                        Batch size in a GPU [default: 6]
   --slow_start_step SLOW_START_STEP
                         Smaller learning rate for before slow_start_step
                         [default: 0]
@@ -42,4 +42,7 @@ optional arguments:
   --from_scene FROM_SCENE
                         the start index of all scenes
   --to_scene TO_SCENE   the end index of all scenes
+```
+
+```
 ```
