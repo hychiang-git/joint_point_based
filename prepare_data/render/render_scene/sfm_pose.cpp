@@ -199,10 +199,11 @@ int main(int argc, char *argv[]) {
             thread_pool[i].join();
         }
 
-        sort(valid_images.begin(), valid_images.end(), 
-            [](const render::RenderBuffer & a, const render::RenderBuffer & b) -> bool{ 
-                return a.vertex_set.size() > b.vertex_set.size(); 
-            });
+        // Do not sort by vertex coverage if we are using camera poses from the dataset
+        //sort(valid_images.begin(), valid_images.end(), 
+        //    [](const render::RenderBuffer & a, const render::RenderBuffer & b) -> bool{ 
+        //        return a.vertex_set.size() > b.vertex_set.size(); 
+        //    });
         //for(unsigned int i=0; i<valid_images.size(); i++){
         //    std::cout<<i<<"/"<<valid_images.size()<<", "<<valid_images[i].vertex_set.size()<<std::endl;
         //}
