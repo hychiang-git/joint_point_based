@@ -10,14 +10,14 @@ LIB=/usr/local/lib
 
 
 sfm_pose: sfm_pose.o render.o tinyply.o
-	g++ $(CPPFLAGS) sfm_pose.o render.o tinyply.o -o $@ -L $(LIB) -fopenmp -lpthread -lz -lopenblas -llapack
+	g++ $(CPPFLAGS) sfm_pose.o render.o tinyply.o -o $@ -L $(LIB) -fopenmp -lpthread -lz -lopenblas -llapack -lOpenImageIO
 	rm *.o
 
 sfm_pose.o: sfm_pose.cpp
 	g++ $(CPPFLAGS) -I $(INC) -I $(EIGEN_INC) -c $< -o $@ -fopenmp
 
 syn_pose: syn_pose.o render.o tinyply.o
-	g++ $(CPPFLAGS) syn_pose.o render.o tinyply.o -o $@ -L $(LIB) -fopenmp -lpthread -lz -lopenblas -llapack
+	g++ $(CPPFLAGS) syn_pose.o render.o tinyply.o -o $@ -L $(LIB) -fopenmp -lpthread -lz -lopenblas -llapack -lOpenImageIO
 	rm *.o
 
 syn_pose.o: syn_pose.cpp
